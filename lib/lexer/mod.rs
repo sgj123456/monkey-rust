@@ -3,7 +3,7 @@ use nom::bytes::complete::{tag, take};
 use nom::character::complete::{alpha1, alphanumeric1, digit1, multispace0};
 use nom::combinator::{map, map_res, recognize};
 use nom::multi::many0;
-use nom::sequence::{delimited, pair};
+use nom::sequence::delimited;
 use nom::*;
 
 use std::str;
@@ -15,8 +15,8 @@ use crate::lexer::token::*;
 
 macro_rules! syntax {
     ($func_name: ident, $tag_string: literal, $output_token: expr) => {
-        fn $func_name<'a>(s: &'a [u8]) -> IResult<&[u8], Token> {
-            map(tag($tag_string), |_| $output_token)(s)
+        fn $func_name(s: &[u8]) -> IResult<&[u8], Token> {
+            map(tag($tag_string), |_| $output_token).parse(s)
         }
     };
 }
@@ -49,7 +49,8 @@ pub fn lex_operator(input: &[u8]) -> IResult<&[u8], Token> {
         lesser_operator_equal,
         greater_operator,
         lesser_operator,
-    ))(input)
+    ))
+    .parse(input)
 }
 
 // punctuations
@@ -74,7 +75,8 @@ pub fn lex_punctuations(input: &[u8]) -> IResult<&[u8], Token> {
         rbrace_punctuation,
         lbracket_punctuation,
         rbracket_punctuation,
-    ))(input)
+    ))
+    .parse(input)
 }
 
 // Strings
@@ -106,17 +108,17 @@ fn complete_byte_slice_str_from_utf8(c: &[u8]) -> Result<&str, Utf8Error> {
     str::from_utf8(c)
 }
 fn string(input: &[u8]) -> IResult<&[u8], String> {
-    delimited(tag("\""), map_res(pis, convert_vec_utf8), tag("\""))(input)
+    delimited(tag("\""), map_res(pis, convert_vec_utf8), tag("\"")).parse(input)
 }
 
 fn lex_string(input: &[u8]) -> IResult<&[u8], Token> {
-    map(string, Token::StringLiteral)(input)
+    map(string, Token::StringLiteral).parse(input)
 }
 
 // Reserved or ident
 fn lex_reserved_ident(input: &[u8]) -> IResult<&[u8], Token> {
     map_res(
-        recognize(pair(
+        recognize((
             alt((alpha1, tag("_"))),
             many0(alt((alphanumeric1, tag("_")))),
         )),
@@ -133,7 +135,8 @@ fn lex_reserved_ident(input: &[u8]) -> IResult<&[u8], Token> {
                 _ => Token::Ident(syntax.to_string()),
             })
         },
-    )(input)
+    )
+    .parse(input)
 }
 
 fn complete_str_from_str<F: FromStr>(c: &str) -> Result<F, F::Err> {
@@ -148,12 +151,13 @@ fn lex_integer(input: &[u8]) -> IResult<&[u8], Token> {
             complete_str_from_str,
         ),
         Token::IntLiteral,
-    )(input)
+    )
+    .parse(input)
 }
 
 // Illegal tokens
 fn lex_illegal(input: &[u8]) -> IResult<&[u8], Token> {
-    map(take(1usize), |_| Token::Illegal)(input)
+    map(take(1usize), |_| Token::Illegal).parse(input)
 }
 
 fn lex_token(input: &[u8]) -> IResult<&[u8], Token> {
@@ -164,11 +168,12 @@ fn lex_token(input: &[u8]) -> IResult<&[u8], Token> {
         lex_reserved_ident,
         lex_integer,
         lex_illegal,
-    ))(input)
+    ))
+    .parse(input)
 }
 
 fn lex_tokens(input: &[u8]) -> IResult<&[u8], Vec<Token>> {
-    many0(delimited(multispace0, lex_token, multispace0))(input)
+    many0(delimited(multispace0, lex_token, multispace0)).parse(input)
 }
 
 pub struct Lexer;

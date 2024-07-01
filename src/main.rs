@@ -34,7 +34,7 @@ fn main() {
         match lex_tokens {
             Ok((_, r)) => {
                 let tokens = Tokens::new(&r);
-                let parsed = Parser::parse_tokens(tokens);
+                let parsed = MyParser::parse_tokens(tokens);
                 match parsed {
                     Ok((_, program)) => {
                         let eval = evaluator.eval_program(program);

@@ -1,6 +1,5 @@
 use nom::*;
 use std::iter::Enumerate;
-use std::ops::{Range, RangeFrom, RangeFull, RangeTo};
 
 #[derive(PartialEq, Debug, Clone)]
 pub enum Token {
@@ -61,14 +60,11 @@ impl<'a> Tokens<'a> {
     }
 }
 
-impl<'a> InputLength for Tokens<'a> {
+impl<'a> Input for Tokens<'a> {
     #[inline]
     fn input_len(&self) -> usize {
         self.tok.len()
     }
-}
-
-impl<'a> InputTake for Tokens<'a> {
     #[inline]
     fn take(&self, count: usize) -> Self {
         Tokens {
@@ -93,55 +89,10 @@ impl<'a> InputTake for Tokens<'a> {
         };
         (second, first)
     }
-}
 
-impl InputLength for Token {
-    #[inline]
-    fn input_len(&self) -> usize {
-        1
-    }
-}
-
-impl<'a> Slice<Range<usize>> for Tokens<'a> {
-    #[inline]
-    fn slice(&self, range: Range<usize>) -> Self {
-        Tokens {
-            tok: self.tok.slice(range.clone()),
-            start: self.start + range.start,
-            end: self.start + range.end,
-        }
-    }
-}
-
-impl<'a> Slice<RangeTo<usize>> for Tokens<'a> {
-    #[inline]
-    fn slice(&self, range: RangeTo<usize>) -> Self {
-        self.slice(0..range.end)
-    }
-}
-
-impl<'a> Slice<RangeFrom<usize>> for Tokens<'a> {
-    #[inline]
-    fn slice(&self, range: RangeFrom<usize>) -> Self {
-        self.slice(range.start..self.end - self.start)
-    }
-}
-
-impl<'a> Slice<RangeFull> for Tokens<'a> {
-    #[inline]
-    fn slice(&self, _: RangeFull) -> Self {
-        Tokens {
-            tok: self.tok,
-            start: self.start,
-            end: self.end,
-        }
-    }
-}
-
-impl<'a> InputIter for Tokens<'a> {
     type Item = &'a Token;
-    type Iter = Enumerate<::std::slice::Iter<'a, Token>>;
-    type IterElem = ::std::slice::Iter<'a, Token>;
+    type IterIndices = Enumerate<::std::slice::Iter<'a, Token>>;
+    type Iter = ::std::slice::Iter<'a, Token>;
 
     #[inline]
     fn iter_indices(&self) -> Enumerate<::std::slice::Iter<'a, Token>> {
@@ -164,6 +115,14 @@ impl<'a> InputIter for Tokens<'a> {
             Ok(count)
         } else {
             Err(Needed::Unknown)
+        }
+    }
+
+    fn take_from(&self, index: usize) -> Self {
+        Self {
+            tok: self.tok.split_at(index).1,
+            start: index,
+            end: self.end,
         }
     }
 }

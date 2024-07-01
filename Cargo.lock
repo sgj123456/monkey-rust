@@ -211,12 +211,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "minimal-lexical"
-version = "0.2.1"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "68354c5c6bd36d73ff3feceb05efa59b6acb7626617f4962be322a825e61f79a"
-
-[[package]]
 name = "monkey-rust"
 version = "0.5.0"
 dependencies = [
@@ -250,12 +244,11 @@ dependencies = [
 
 [[package]]
 name = "nom"
-version = "7.1.1"
+version = "8.0.0-alpha2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "a8903e5a29a317527874d0402f867152a3d21c908bb0b933e416c65e301d4c36"
+checksum = "c2785486691910e746b3d84220af18362bd15ba71f9b7bc0a47ac549550b7fe2"
 dependencies = [
  "memchr",
- "minimal-lexical",
 ]
 
 [[package]]
